@@ -2,100 +2,133 @@
 
 ## Overview
 
-The `clap-detection.py` program is designed to detect claps or loud sounds using a microphone. When a clap is detected, it triggers an action (such as playing MP3 files from a directory). The program leverages `pyaudio` to capture audio, processes the audio data in real-time, and calculates the Root Mean Square (RMS) value to detect claps based on predefined thresholds.
-
-The program integrates with additional Python files, such as `playmp3.py`, which handles MP3 playback functionality.
+This project contains multiple Python scripts working together to detect claps, record audio, and handle MP3 playback. It integrates audio input/output functionalities using `pyaudio` and `pygame`, making it suitable for audio-triggered actions and basic audio recording and processing.
 
 ## Features
 
-- **Clap detection**: Listens for claps by measuring sound amplitude through RMS calculations.
-- **Dynamic threshold adjustment**: Automatically adjusts sensitivity to detect claps in noisy or quiet environments.
-- **MP3 playback**: Plays MP3 files from a specified directory when a clap is detected.
-  
-More Python files and features will be integrated into this program in the future.
+- **Clap Detection**: Detects claps using real-time microphone input and triggers an action (such as playing an MP3 file).
+- **MP3 Playback**: Plays MP3 files from a specified directory in response to detected claps.
+- **Audio Recording**: Records audio input from the microphone, saves it as a WAV file, and converts it to MP3.
+- **Dynamic Thresholds**: Adjusts sensitivity to detect claps in various audio environments.
+
+More features will be added in the future as additional Python files are integrated.
 
 ## Dependencies
 
-This program requires the following Python libraries:
+This project requires the following Python libraries:
 
-- `pyaudio`: For capturing audio input from the microphone.
-- `struct`: For unpacking audio data.
-- `math`: For calculating the RMS value of the audio input.
+- `pyaudio`: For capturing audio input and managing streams.
 - `pygame`: For playing MP3 files.
 - `os`: For file directory management.
+- `wave`: For saving audio as WAV files.
+- `pydub`: For converting WAV files to MP3.
+- `threading`: For running audio recording and key-press listeners concurrently.
 
-To install the necessary dependencies, run:
+To install the required dependencies, run:
 
+```bash
+pip install pyaudio pygame pydub
 ```
-pip install pyaudio pygame
-```
 
-Ensure that a valid MP3 file directory is available for playback.
+Make sure you have `ffmpeg` installed for `pydub` to handle MP3 conversion:
+
+- On Ubuntu: `sudo apt install ffmpeg`
+- On macOS: `brew install ffmpeg`
+- On Windows: [Download ffmpeg](https://ffmpeg.org/download.html)
 
 ## How It Works
 
 ### `clap-detection.py`
 
-1. **Microphone Input**: The program opens a microphone stream using `pyaudio`.
-2. **Audio Processing**: Continuously reads short blocks of audio data.
-3. **RMS Calculation**: For each block, the program calculates the RMS value, indicating the volume of the sound.
-4. **Clap Detection**: If the RMS value exceeds a predefined threshold, the program registers a "clap" and triggers an action (e.g., playing MP3 files).
-5. **MP3 Playback**: When a clap is detected, the program calls the `play_mp3s_from_directory()` function from `playmp3.py` to play MP3 files from a specified directory.
+This script listens for claps using the microphone and triggers an MP3 playback when a clap is detected.
+
+1. **Microphone Input**: Captures real-time audio using `pyaudio`.
+2. **RMS Calculation**: Computes the Root Mean Square (RMS) to detect the volume of the sound.
+3. **Clap Detection**: If the volume exceeds a threshold, it detects a clap and triggers MP3 playback.
+4. **MP3 Playback**: Calls the function from `playmp3.py` to play MP3 files.
 
 ### `playmp3.py`
 
-1. **MP3 File Discovery**: This script retrieves all `.mp3` files from a specified directory.
-2. **MP3 Playback**: Uses the `pygame` library to load and play MP3 files one by one in alphabetical order.
-3. **Playback Control**: Waits for the current MP3 file to finish before playing the next one.
+This script handles MP3 file playback.
+
+1. **MP3 Discovery**: Retrieves all `.mp3` files from a specified directory.
+2. **MP3 Playback**: Uses `pygame` to play each MP3 file in order.
+
+### `recording.py`
+
+This script allows you to record audio input from the microphone, save it as a WAV file, and convert it to MP3.
+
+1. **Audio Recording**: Records audio input using `pyaudio` and saves it as a WAV file.
+2. **MP3 Conversion**: Converts the WAV file to MP3 using the `pydub` library.
+3. **Threading**: Uses separate threads to handle real-time recording and listen for a key press to stop recording.
 
 ## Parameters
 
-- **Clap Detection (clap-detection.py)**:
-  - `INITIAL_TAP_THRESHOLD`: Initial threshold for detecting claps. Adjust this value to control sensitivity.
-  - `OVERSENSITIVE` and `UNDERSENSITIVE`: Values that adjust the threshold based on continuous noise or quietness.
-  - `MAX_TAP_BLOCKS`: Maximum duration a sound can last to still be considered a clap.
+### Clap Detection (`clap-detection.py`):
+- `INITIAL_TAP_THRESHOLD`: Adjusts the sensitivity of the clap detection.
+- `FORMAT`, `RATE`, `CHANNELS`, `INPUT_BLOCK_TIME`: Configurable audio input parameters for `pyaudio`.
+- `OVERSENSITIVE`, `UNDERSENSITIVE`, `MAX_TAP_BLOCKS`: Threshold controls for handling noisy and quiet environments.
 
-- **MP3 Playback (playmp3.py)**:
-  - `directory`: Path to the folder where the MP3 files are stored.
+### MP3 Playback (`playmp3.py`):
+- `directory`: Path to the folder where MP3 files are stored.
+
+### Audio Recording (`recording.py`):
+- `FORMAT`, `CHANNELS`, `RATE`, `CHUNK`: Audio input parameters for recording.
+- `WAVE_OUTPUT_FILENAME`: Name of the WAV file where audio is saved.
+- `MP3_OUTPUT_FILENAME`: Name of the MP3 file generated from the WAV file.
 
 ## Usage
 
 ### Running Clap Detection
 
-1. Ensure you have a microphone connected to your system.
-2. Create a directory with MP3 files for playback. Update the path in `playmp3.play_mp3s_from_directory()` to point to your directory.
-3. Run the clap detection script:
+To run the clap detection script:
 
-```
+```bash
 python clap-detection.py
 ```
 
 The program will listen for claps and play MP3 files from the specified directory when a clap is detected.
 
-### Running MP3 Playback Script
+### Running MP3 Playback
 
-You can also run `playmp3.py` as a standalone script to play all MP3 files in a directory:
+You can run the `playmp3.py` script standalone to play all MP3 files in a directory:
 
-```
+```bash
 python playmp3.py /path/to/your/mp3/directory
 ```
 
-## Example
+### Recording Audio
 
-In `clap-detection.py`, when a clap is detected, it will trigger the playback of MP3 files from the `../tonyStarkClap` directory.
+To record audio, run:
 
-```python
-playmp3.play_mp3s_from_directory("../tonyStarkClap")
+```bash
+python recording.py
 ```
 
-You can change this path to any directory containing MP3 files.
+Press `Enter` to stop the recording, and the program will save the recording as a WAV file and convert it to MP3.
+
+## Example
+
+- **Clap Detection**: Detect a clap and play MP3 files from the `../tonyStarkClap` directory.
+  ```python
+  playmp3.play_mp3s_from_directory("../tonyStarkClap")
+  ```
+
+- **Recording**: Record audio and convert it to MP3.
+  ```bash
+  python recording.py
+  ```
 
 ## Future Development
 
-- **More Sound Detection Features**: Additional actions triggered by different types of sounds.
-- **User Interface**: A simple GUI for setting thresholds and controlling playback.
-- **Advanced Sensitivity Adjustments**: More refined noise filtering for varying environments.
+- **Advanced Clap Detection**: Enhance the sensitivity adjustments for different environments.
+- **Feature Expansion**: Add more features like sound classification or more advanced audio processing.
+- **User Interface**: Implement a simple GUI for configuring thresholds and managing recordings.
 
 ## License
 
 This project is open-source and available under the [MIT License](https://opensource.org/licenses/MIT).
+
+---
+
+Contributions are welcome! Feel free to submit pull requests or open issues for improvements.
